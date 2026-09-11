@@ -1,0 +1,63 @@
+name: Zombie Run Cost Killer CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: trainpilot
+          POSTGRES_PASSWORD: trainpilot_secret_pass
+          POSTGRES_DB: trainpilot_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Run Pytest Test Suite (Phases 1-6)
+        env:
+          DATABASE_URL: postgresql+asyncpg://trainpilot:trainpilot_secret_pass@localhost:5432/trainpilot_db
+        run: |
+          python -m pytest
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Image
+        run: |
+          docker build -t trainpilot-backend:latest -f Dockerfile .
+
+      - name: Build Frontend Image
+        run: |
+          docker build -t trainpilot-frontend:latest -f Dockerfile.frontend .
