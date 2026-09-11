@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environment Variables
+.env
+!.env.example
+
+# Database & SQLite Fallbacks
+*.sqlite
+*.db
+storage/zombierun.db
+
+# Node / Frontend
+node_modules/
+dist/
+.vite/
+
+# Outputs and Logs
+storage/outputs/
+storage/checkpoints/
+logs/
+*.log
